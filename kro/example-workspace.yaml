@@ -1,0 +1,8 @@
+apiVersion: kro.run/v1alpha1
+kind: Workspace
+metadata:
+  name: my-app
+spec:
+  name: my-app
+  description: "Example application workspace"
+  visibility: public

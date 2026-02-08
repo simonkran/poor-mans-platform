@@ -1,0 +1,8 @@
+apiVersion: kro.run/v1alpha1
+kind: Work
+metadata:
+  name: my-work
+spec:
+  name: my-work
+  workspace: my-app
+  image: nginx:latest

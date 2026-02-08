@@ -1,0 +1,57 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: work.kro.run
+spec:
+  schema:
+    apiVersion: v1alpha1
+    kind: Work
+    spec:
+      name: string
+      workspace: string
+      image: string
+      replicas: integer | default=1
+      port: integer | default=8080
+    status:
+      availableReplicas: ${deployment.status.availableReplicas}
+      deploymentReady: ${deployment.status.conditions}
+      serviceIP: ${service.spec.clusterIP}
+
+  resources:
+    - id: deployment
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${schema.spec.name}
+          namespace: ${schema.spec.workspace}
+        spec:
+          replicas: ${schema.spec.replicas}
+          selector:
+            matchLabels:
+              app: ${schema.spec.name}
+          template:
+            metadata:
+              labels:
+                app: ${schema.spec.name}
+            spec:
+              containers:
+                - name: app
+                  image: ${schema.spec.image}
+                  ports:
+                    - containerPort: ${schema.spec.port}
+
+    - id: service
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${schema.spec.name}
+          namespace: ${schema.spec.workspace}
+        spec:
+          selector:
+            app: ${schema.spec.name}
+          ports:
+            - protocol: TCP
+              port: ${schema.spec.port}
+              targetPort: ${schema.spec.port}

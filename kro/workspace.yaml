@@ -1,0 +1,102 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: workspace.kro.run
+spec:
+  schema:
+    apiVersion: v1alpha1
+    kind: Workspace
+    spec:
+      name: string
+      githubOwner: string | default="simonkran"
+      description: string | default="Managed by Workspace"
+      visibility: string | default="private"
+      templateOwner: string | default="simonkran"
+      templateRepository: string | default="template-repo"
+      branch: string | default="main"
+      kustomizePath: string | default="./dev"
+      syncInterval: string | default="5m"
+      autoInit: boolean | default=true
+      prune: boolean | default=true
+      gitSecretName: string | default=""
+    status:
+      namespacePhase: ${workspaceNamespace.status.phase}
+      repositoryReady: ${githubRepo.status.conditions}
+      kustomizationReady: ${fluxKustomization.status.conditions}
+
+  resources:
+    - id: workspaceNamespace
+      template:
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          name: ${schema.spec.name}
+          labels:
+            app.kubernetes.io/managed-by: kro
+
+    - id: githubRepo
+      template:
+        apiVersion: repo.github.upbound.io/v1alpha1
+        kind: Repository
+        metadata:
+          name: ${schema.spec.name}-repo
+        spec:
+          forProvider:
+            name: ${schema.spec.name}
+            description: ${schema.spec.description}
+            visibility: ${schema.spec.visibility}
+            autoInit: ${schema.spec.autoInit}
+            template:
+              - owner: ${schema.spec.templateOwner}
+                repository: ${schema.spec.templateRepository}
+          providerConfigRef:
+            name: default
+
+    - id: fluxGitRepoPublic
+      includeWhen:
+        - ${schema.spec.visibility == "public"}
+      template:
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: GitRepository
+        metadata:
+          name: ${schema.spec.name}-source
+          namespace: ${schema.spec.name}
+        spec:
+          interval: ${schema.spec.syncInterval}
+          url: https://github.com/${schema.spec.githubOwner}/${schema.spec.name}
+          ref:
+            branch: ${schema.spec.branch}
+
+    - id: fluxGitRepoPrivate
+      includeWhen:
+        - ${schema.spec.visibility == "private"}
+      template:
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: GitRepository
+        metadata:
+          name: ${schema.spec.name}-source
+          namespace: ${schema.spec.name}
+        spec:
+          interval: ${schema.spec.syncInterval}
+          url: https://github.com/${schema.spec.githubOwner}/${schema.spec.name}
+          ref:
+            branch: ${schema.spec.branch}
+          secretRef:
+            name: ${schema.spec.gitSecretName}
+
+    - id: fluxKustomization
+      template:
+        apiVersion: kustomize.toolkit.fluxcd.io/v1
+        kind: Kustomization
+        metadata:
+          name: ${schema.spec.name}-deploy
+          namespace: ${schema.spec.name}
+        spec:
+          interval: ${schema.spec.syncInterval}
+          targetNamespace: ${schema.spec.name}
+          sourceRef:
+            kind: GitRepository
+            name: ${schema.spec.name}-source
+          path: ${schema.spec.kustomizePath}
+          prune: ${schema.spec.prune}
+          timeout: 3m

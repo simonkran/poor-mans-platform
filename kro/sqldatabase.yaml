@@ -1,0 +1,46 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: sqldatabase.kro.run
+spec:
+  schema:
+    apiVersion: v1alpha1
+    kind: SQLDatabase
+    spec:
+      name: string
+      workspace: string
+    status:
+      helmReleaseReady: ${helmRelease.status.conditions}
+
+  resources:
+    - id: helmRepository
+      template:
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        metadata:
+          name: bitnami
+          namespace: ${schema.spec.workspace}
+        spec:
+          type: oci
+          interval: 1h
+          url: oci://registry-1.docker.io/bitnamicharts
+
+    - id: helmRelease
+      template:
+        apiVersion: helm.toolkit.fluxcd.io/v2
+        kind: HelmRelease
+        metadata:
+          name: ${schema.spec.name}
+          namespace: ${schema.spec.workspace}
+        spec:
+          interval: 5m
+          chart:
+            spec:
+              chart: mariadb
+              sourceRef:
+                kind: HelmRepository
+                name: ${helmRepository.metadata.name}
+                namespace: ${schema.spec.workspace}
+          values:
+            auth:
+              database: ${schema.spec.name}
