@@ -15,7 +15,7 @@ spec:
       templateOwner: string | default="simonkran"
       templateRepository: string | default="template-repo"
       branch: string | default="main"
-      kustomizePath: string | default="./dev"
+      environment: string | default="dev" # Kustomize Path
       syncInterval: string | default="5m"
       autoInit: boolean | default=true
       prune: boolean | default=true
@@ -121,6 +121,6 @@ spec:
           sourceRef:
             kind: GitRepository
             name: ${schema.spec.name}-source
-          path: ${schema.spec.kustomizePath}
+          path: ${schema.spec.environment}
           prune: ${schema.spec.prune}
           timeout: 3m
