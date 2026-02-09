@@ -18,10 +18,11 @@ spec:
       syncInterval: string | default="5m"
       autoInit: boolean | default=true
       prune: boolean | default=true
+      createRepository: boolean | default=true
       gitSecretName: string | default=""
     status:
       namespacePhase: ${workspaceNamespace.status.phase}
-      repositoryReady: ${githubRepo.status.conditions}
+      repositoryReady: ${githubRepo.?status.?conditions.orValue([])}
       kustomizationReady: ${fluxKustomization.status.conditions}
 
   resources:
@@ -35,6 +36,8 @@ spec:
             app.kubernetes.io/managed-by: kro
 
     - id: githubRepo
+      includeWhen:
+        - ${schema.spec.createRepository == true}
       template:
         apiVersion: repo.github.upbound.io/v1alpha1
         kind: Repository
@@ -54,6 +57,7 @@ spec:
 
     - id: fluxGitRepoPublic
       includeWhen:
+        - ${schema.spec.createRepository == true}
         - ${schema.spec.visibility == "public"}
       template:
         apiVersion: source.toolkit.fluxcd.io/v1
@@ -69,6 +73,7 @@ spec:
 
     - id: fluxGitRepoPrivate
       includeWhen:
+        - ${schema.spec.createRepository == true}
         - ${schema.spec.visibility == "private"}
       template:
         apiVersion: source.toolkit.fluxcd.io/v1
