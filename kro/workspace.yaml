@@ -11,6 +11,7 @@ spec:
       githubOwner: string | default="simonkran"
       description: string | default="Managed by Workspace"
       visibility: string | default="private"
+      useTemplate: boolean | default=true
       templateOwner: string | default="simonkran"
       templateRepository: string | default="template-repo"
       branch: string | default="main"
@@ -38,6 +39,24 @@ spec:
     - id: githubRepo
       includeWhen:
         - ${schema.spec.createRepository == true}
+      template:
+        apiVersion: repo.github.upbound.io/v1alpha1
+        kind: Repository
+        metadata:
+          name: ${schema.spec.name}-repo
+        spec:
+          forProvider:
+            name: ${schema.spec.name}
+            description: ${schema.spec.description}
+            visibility: ${schema.spec.visibility}
+            autoInit: ${schema.spec.autoInit}
+          providerConfigRef:
+            name: default
+
+    - id: githubRepoWithTemplate
+      includeWhen:
+        - ${schema.spec.createRepository == true}
+        - ${schema.spec.useTemplate == true}
       template:
         apiVersion: repo.github.upbound.io/v1alpha1
         kind: Repository
