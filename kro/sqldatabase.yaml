@@ -20,6 +20,8 @@ spec:
         metadata:
           name: bitnami
           namespace: ${schema.spec.workspace}
+          labels:
+            app.kubernetes.io/part-of: pmp-${schema.spec.name}
         spec:
           type: oci
           interval: 1h
@@ -32,6 +34,8 @@ spec:
         metadata:
           name: ${schema.spec.name}
           namespace: ${schema.spec.workspace}
+          labels:
+            app.kubernetes.io/part-of: pmp-${schema.spec.name}
         spec:
           interval: 5m
           chart:

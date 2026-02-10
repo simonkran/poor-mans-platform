@@ -25,15 +25,19 @@ spec:
         metadata:
           name: ${schema.spec.name}
           namespace: ${schema.spec.workspace}
+          labels:
+            app.kubernetes.io/part-of: pmp-${schema.spec.name}
         spec:
           replicas: ${schema.spec.replicas}
           selector:
             matchLabels:
               app: ${schema.spec.name}
+              app.kubernetes.io/part-of: pmp-${schema.spec.name}
           template:
             metadata:
               labels:
                 app: ${schema.spec.name}
+                app.kubernetes.io/part-of: pmp-${schema.spec.name}
             spec:
               containers:
                 - name: app
@@ -48,9 +52,12 @@ spec:
         metadata:
           name: ${schema.spec.name}
           namespace: ${schema.spec.workspace}
+          labels:
+            app.kubernetes.io/part-of: pmp-${schema.spec.name}
         spec:
           selector:
             app: ${schema.spec.name}
+            app.kubernetes.io/part-of: pmp-${schema.spec.name}
           ports:
             - protocol: TCP
               port: ${schema.spec.port}
