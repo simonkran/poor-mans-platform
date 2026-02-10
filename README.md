@@ -48,10 +48,9 @@ Create a workspace:
 apiVersion: v1alpha1
 kind: Workspace
 metadata:
-  name: my-app
+  name: my-workspace
 spec:
-  name: my-app
-  templateRepository: template-repo
+  name: my-workspace
 ```
 
 Deploy a workload:
@@ -63,7 +62,7 @@ metadata:
   name: api
 spec:
   name: api
-  workspace: my-app
+  workspace: my-workspace
   image: nginx:latest
 ```
 
@@ -76,5 +75,5 @@ metadata:
   name: mydb
 spec:
   name: mydb
-  workspace: my-app
+  workspace: my-workspace
 ```
